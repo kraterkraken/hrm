@@ -1,0 +1,55 @@
+# My solution to the "Digit Exploder" puzzle in Human Resource Machine
+# Grab each number from the inbox and send its digits to the outbox.
+# Best way to run: hrm.py testing/test2.hrm -m 12 -i STOP
+
+data 8 413 129 68
+init 9 0
+init 10 10
+init 11 100
+name 9 zero
+name 10 ten
+name 11 hundred
+name 3 hundreds
+name 4 tens
+name 5 temp
+
+:begin
+copyfrom $zero
+copyto $hundreds
+copyto $tens
+inbox
+copyto $temp
+
+:div100
+sub $hundred
+jumpneg :div10
+copyto $temp
+bump+ $hundreds
+copyfrom $temp
+jump :div100
+
+:div10
+copyfrom $temp
+sub $ten
+jumpneg :output100s
+copyto $temp
+bump+ $tens
+jump :div10
+
+:output100s
+copyfrom $hundreds
+jumpzero :output10s
+outbox
+copyfrom $tens
+outbox
+jump :output1s
+
+:output10s
+copyfrom $tens
+jumpzero :output1s
+outbox
+
+:output1s
+copyfrom $temp
+outbox
+jump :begin
