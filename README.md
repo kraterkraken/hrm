@@ -7,7 +7,7 @@ Usage:
     Options:
         -d datafile Sets the interpreter to read input data from the datafile
                     (note: the "data" instruction will override data in the datafile)
-        -m memsize     Sets the size of temporary memory (default is 25)
+        -m memsize  Sets the size of temporary memory (default is 25)
         -i inboxmode        
                     Tells the interpreter how to handle the situation where
                     an "inbox" instruction is encountered, but there is no more
@@ -57,5 +57,5 @@ Note:
 
 There is one instruction per line.
 Empty lines and lines starting with # are ignored.
-Temp memory has room for 25 values (0-24).  It is initialized to zeros.
+Temp memory is initialized to zeros.
 Working memory has room for 1 value, and is initialized to zero.
