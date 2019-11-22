@@ -41,9 +41,9 @@ Language Instruction Set:
     sub t           working memory = working memory - value at temp memory location t
     bump+ t         increment value at temp memory location t
     bump- t         decrement value at temp memory location t
-    jump tag        jump to the given tag
-    jumpneg tag     jump to the given tag if value in working memory < 0
-    jumpzero tag    jump to the given tag if value in working memory == 0
+    jump :tag       jump to the given tag
+    jumpneg :tag    jump to the given tag if value in working memory < 0
+    jumpzero :tag   jump to the given tag if value in working memory == 0
 
 
     t is any numeric value from 0 to [memsize]
