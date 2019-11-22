@@ -46,7 +46,7 @@ Language Instruction Set:
     jumpzero tag    jump to the given tag if value in working memory == 0
 
 
-    t is any numeric value from 0 o 24
+    t is any numeric value from 0 to [memsize]
     n is any string starting with a letter, followed by any number of
       alphanumerics or underscores
 
