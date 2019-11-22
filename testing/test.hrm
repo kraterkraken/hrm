@@ -1,0 +1,48 @@
+# output should be:
+#   99
+#   19
+#   A
+#   2000
+
+data 7 99 19 'A'
+init 4 2000
+name 4 two_thousand
+name 2 foo
+
+# value 7 goes in memory location 1
+inbox
+copyto 1
+
+# value 99 goes in memory location 7
+inbox
+copyto 7
+
+# value 19 goes in memory location 2 (aka "foo")
+inbox
+copyto $foo
+
+# value 'A' goes where foo points, namely memory location 19
+inbox
+copyto [$foo]
+
+# will generate a warning
+inbox
+
+# output value from where 1 points, namely memory location 7 : 99
+copyfrom [1]
+outbox
+
+# output value from memory location 2 : 19
+copyfrom 2
+outbox
+
+# output value from memory location 19 : 'A'
+copyfrom 19
+outbox
+
+jump :exit
+outbox
+
+:exit
+copyfrom $two_thousand
+outbox
