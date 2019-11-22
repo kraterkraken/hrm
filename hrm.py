@@ -128,7 +128,8 @@ class HrmInterpreter:
                     if self.inbox_mode == "WARN":
                         print("Warning: attempting to input data, but there is no more.")
                     elif self.inbox_mode == "STOP":
-                        sys.exit("Tried to read data that is not there ... exiting.")
+                        print("Tried to read data that is not there ... ending HRM program.")
+                        return
                     elif self.inbox_mode == "QUERY":
                         d = input("Enter a value for the inbox instruction:")
                 else:
@@ -154,31 +155,31 @@ class HrmInterpreter:
             elif instruction == "copyto":
                 self.stats["steps"] += 1
                 [arg] = self.get_args(tokens, ["location"])
-                self.temp[int(arg)] = self.working
+                self.temp[arg] = self.working
 
             elif instruction == "bump+":
                 self.stats["steps"] += 1
                 [arg] = self.get_args(tokens, ["location"])
-                self.temp[int(arg)] += 1
+                self.temp[arg] += 1
 
             elif instruction == "bump-":
                 self.stats["steps"] += 1
                 [arg] = self.get_args(tokens, ["location"])
-                self.temp[int(arg)] -= 1
+                self.temp[arg] -= 1
 
             elif instruction == "add":
                 self.stats["steps"] += 1
                 [arg] = self.get_args(tokens, ["location"])
-                self.working += temp[arg]
+                self.working += self.temp[arg]
 
             elif instruction == "sub":
                 self.stats["steps"] += 1
                 [arg] = self.get_args(tokens, ["location"])
-                self.working -= temp[arg]
+                self.working -= self.temp[arg]
 
             elif instruction == "init":
                 [loc, val] = self.get_args(tokens, ["location", "value"])
-                self.temp[int(loc)] = val
+                self.temp[loc] = eval(val)
 
             elif instruction == "name":
                 [loc, name] = self.get_args(tokens, ["location", "name"])
