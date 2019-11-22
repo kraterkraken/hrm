@@ -12,6 +12,7 @@ class HrmInterpreter:
     def __init__(self, instructions_string, data_string, memsize, inboxmode):
         # set up virtual machine
         self.inbox_mode = inboxmode
+        self.memsize = memsize
         self.temp = [0 for i in range(memsize)]
         self.working = 0
         self.ip = 0 # instruction pointer
@@ -28,6 +29,12 @@ class HrmInterpreter:
         )
 
     # -------------------------------------------------------------------------
+    def display_stats(self):
+        print( " Statistics:" )
+        print( " Size = {}".format(self.stats["size"]) )
+        print( " Steps = {}".format(self.stats["steps"]) )
+
+    # -------------------------------------------------------------------------
     def get_location(self, loc_string):
 
         number = "\d+"  # 1+ digits
@@ -42,26 +49,29 @@ class HrmInterpreter:
 
         m = re.match(location_re, loc_string)
         if m:
-            val = None
+            addr = None
             if m.group(1) != None:
                 # we got a numeric memory address
-                val = int(m.group(1))
+                addr = int(m.group(1))
             elif m.group(2) != None:
                 # we got a pointer, so dereference it
-                val = int(self.temp[int(m.group(2))])
+                addr = int(self.temp[int(m.group(2))])
             elif m.group(3) != None:
                 # we got a symbolic memory address
-                val = int(self.names[m.group(3)])
+                addr = int(self.names[m.group(3)])
             elif m.group(4) != None:
                 # we got a symbolic pointer, so dereference it
-                val = int(self.temp[int(self.names[m.group(4)])])
+                addr = int(self.temp[int(self.names[m.group(4)])])
 
-            if val == None or val < 0 or val > 24:
-                sys.exit("Error: invalid memory address {}, should be between 0 and 24.".format(val))
+            if addr == None or addr < 0 or addr >= self.memsize:
+                sys.exit("Error on line {}: "
+                    "invalid memory address {}, "
+                    "should be in range [0,{}]".format(self.ip, addr, self.memsize-1))
             else:
-                return val
+                return addr
         else:
-            sys.exit("Syntax error: '" + loc_string + "' is not a valid location.'")
+            sys.exit("Syntax error on line {}: "
+                "'{}' is not a valid location.".format(self.ip, loc_string))
 
     # -------------------------------------------------------------------------
     def get_args(self, tokens, arg_types=[]):
@@ -70,9 +80,9 @@ class HrmInterpreter:
 
         if len(args) != len(arg_types):
             sys.exit(
-                "Error on line {}:"
-                " Instruction '{}' should have had {} arguments."
-                "  It had {}.".format(
+                "Error on line {}: "
+                "instruction '{}' should have had {} arguments, "
+                "it had {}.".format(
                     self.ip+1, tokens[0], len(arg_types), len(args)
                     )
                 )
@@ -195,7 +205,8 @@ class HrmInterpreter:
                     continue
 
             else:
-                sys.exit("Error on line {}: Bad instruction '{}'".format(self.ip+1, instruction))
+                sys.exit("Error on line {}: "
+                    "bad instruction '{}'".format(self.ip+1, instruction))
 
             self.ip += 1
 # end class definition
@@ -255,4 +266,4 @@ hrm = HrmInterpreter(
     opman.options.memsize,
     opman.options.inboxmode)
 hrm.run()
-print(hrm.stats)
+hrm.display_stats()
