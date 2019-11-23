@@ -1,3 +1,4 @@
+# to run:  python hrm.py -m 25 -i WARN testing/test.hrm
 # output should be:
 #   99
 #   19
@@ -19,11 +20,11 @@ copyto 7
 
 # value 19 goes in memory location 2 (aka "foo")
 inbox
-copyto $foo
+copyto foo
 
 # value 'A' goes where foo points, namely memory location 19
 inbox
-copyto [$foo]
+copyto [foo]
 
 # will generate a warning
 inbox
@@ -44,5 +45,5 @@ jump :exit
 outbox
 
 :exit
-copyfrom $two_thousand
+copyfrom two_thousand
 outbox
