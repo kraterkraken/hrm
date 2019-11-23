@@ -19,7 +19,7 @@ class HrmInterpreter:
         self.ip = 0 # instruction pointer
         self.dp = 0 # input data pointer
         self.instructions = instructions_string.split("\n")
-        self.tags = dict([(b,a) for (a,b) in list(enumerate(self.instructions)) if b[:1] == ":"])
+        self.jumptags = dict([(b,a) for (a,b) in list(enumerate(self.instructions)) if b[:1] == ":"])
         self.data = [eval(x) for x in data_string.split()]
         self.names = {}
         self.stats = {"size":0, "steps":0}
@@ -36,55 +36,40 @@ class HrmInterpreter:
         print( " Steps = {}".format(self.stats["steps"]) )
 
     # -------------------------------------------------------------------------
-    def get_location(self, loc_string):
-
-        number = "\d+"  # 1+ digits
-        name = "[a-zA-Z][0-9a-zA-Z_]*"  # 1 alpha and 0+ AlphaNumUnderscores
-
-        address_re = "^(" + number + ")$"               # group 1: number
-        address_deref_re = "^\[(" + number + ")\]$"     # group 2: [number]
-        symbol_re = "^\$(" + name + ")$"                # group 3: $name
-        symbol_deref_re = "^\[\$(" + name + ")\]$"      # group 4: [$name]
-
-        location_re = address_re + "|" + address_deref_re + "|" + symbol_re + "|" + symbol_deref_re
-
-        m = re.match(location_re, loc_string)
-        if m:
-            addr = None
-            if m.group(1) != None:
-                # we got a numeric memory address
-                addr = int(m.group(1))
-            elif m.group(2) != None:
-                # we got a pointer, so dereference it
-                addr = int(self.temp[int(m.group(2))])
-            elif m.group(3) != None:
-                # we got a symbolic memory address
-                addr = int(self.names[m.group(3)])
-            elif m.group(4) != None:
-                # we got a symbolic pointer, so dereference it
-                addr = int(self.temp[int(self.names[m.group(4)])])
-
-            if addr == None or addr < 0 or addr >= self.memsize:
-                sys.exit("Error on line {}: "
-                    "invalid memory address {}, "
-                    "should be in range [0,{}]".format(self.ip, addr, self.memsize-1))
-            else:
-                return addr
-        else:
-            sys.exit("Syntax error on line {}: "
-                "'{}' is not a valid location.".format(self.ip, loc_string))
+    def assert_memaddr(self, addr):
+        if addr == None or addr < 0 or addr >= self.memsize:
+            sys.exit("Error on line {}: "
+                "invalid memory address {}, "
+                "should be in range [0,{}]".format(self.ip, addr, self.memsize-1))
 
     # -------------------------------------------------------------------------
-    def get_args(self, tokens, arg_types=[]):
+    def get_memref(self, mem_tuple):
 
-        args = tokens[1:]
+            (memref, type, deref) = mem_tuple
+
+            addr = None
+            if  type == 'addr' : addr = int(memref)
+            elif type == 'name': addr = self.names[memref]
+
+            self.assert_memaddr(addr)
+
+            if deref: addr = self.temp[addr]
+
+            self.assert_memaddr(addr)
+
+            return addr
+
+    # -------------------------------------------------------------------------
+    def get_args(self, instruction, arg_string, arg_types=[]):
+
+        args = arg_string.split()
 
         if len(args) != len(arg_types):
             sys.exit(
                 "Error on line {}: "
                 "instruction '{}' should have had {} arguments, "
                 "it had {}.".format(
-                    self.ip+1, tokens[0], len(arg_types), len(args)
+                    self.ip+1, instruction, len(arg_types), len(args)
                     )
                 )
 
@@ -93,13 +78,14 @@ class HrmInterpreter:
         parse_list = zip(arg_types, args)
         res = []
         for type,arg in parse_list:
-            if type == "location":
-                res.append(self.get_location(arg))
+            if type == "memref":
+                mem_tuple = self.parser.parse_memref(arg)
+                res.append(self.get_memref(mem_tuple))
             elif type =="value":
                 res.append(arg)
             elif type == "name":
                 res.append(arg)
-            elif type == "tag":
+            elif type == "jumptag":
                 res.append(arg)
             else:
                 sys.exit("Error: bad argument type '{}'".format(type))
@@ -112,18 +98,19 @@ class HrmInterpreter:
         # execute the HRM program until there are no more instructions
         while self.ip < len(self.instructions):
 
-            # skip blank lines, comments, and tagged lines
-            if len(self.instructions[self.ip]) == 0 or self.instructions[self.ip][0] in ('#', ':'):
+            self.parser.set_line_num(self.ip)
+            (instruction, arg_string) = self.parser.parse_line(self.instructions[self.ip])
+
+            # perform the given instruction
+
+            if len(instruction) == 0 or instruction[0] in ('#', ':'):
+                # skip blank lines, comments, and lines with jumptags
                 self.ip += 1
                 continue
 
-            # perform the given instruction
-            tokens = self.instructions[self.ip].split()
-            instruction = tokens[0]
-
-            if instruction == "inbox":
+            elif instruction == "inbox":
                 self.stats["steps"] += 1
-                self.get_args(tokens)
+                self.get_args(instruction, arg_string)
                 d = None
                 if self.dp >= len(self.data):
                     if self.inbox_mode == "WARN":
@@ -141,69 +128,68 @@ class HrmInterpreter:
 
             elif instruction == "outbox":
                 self.stats["steps"] += 1
-                self.get_args(tokens)
+                self.get_args(instruction, arg_string)
                 print(self.working)
 
             elif instruction == 'data':
-                data_string = " ".join(tokens[1:])
-                self.data = [eval(x) for x in data_string.split()]
+                self.data = [eval(x) for x in arg_string.split()]
 
             elif instruction == "copyfrom":
                 self.stats["steps"] += 1
-                [arg] = self.get_args(tokens, ["location"])
+                [arg] = self.get_args(instruction, arg_string, ["memref"])
                 self.working = self.temp[arg]
 
             elif instruction == "copyto":
                 self.stats["steps"] += 1
-                [arg] = self.get_args(tokens, ["location"])
+                [arg] = self.get_args(instruction, arg_string, ["memref"])
                 self.temp[arg] = self.working
 
             elif instruction == "bump+":
                 self.stats["steps"] += 1
-                [arg] = self.get_args(tokens, ["location"])
+                [arg] = self.get_args(instruction, arg_string, ["memref"])
                 self.temp[arg] += 1
 
             elif instruction == "bump-":
                 self.stats["steps"] += 1
-                [arg] = self.get_args(tokens, ["location"])
+                [arg] = self.get_args(instruction, arg_string, ["memref"])
                 self.temp[arg] -= 1
 
             elif instruction == "add":
                 self.stats["steps"] += 1
-                [arg] = self.get_args(tokens, ["location"])
+                [arg] = self.get_args(instruction, arg_string, ["memref"])
                 self.working += self.temp[arg]
 
             elif instruction == "sub":
                 self.stats["steps"] += 1
-                [arg] = self.get_args(tokens, ["location"])
+                [arg] = self.get_args(instruction, arg_string, ["memref"])
                 self.working -= self.temp[arg]
 
             elif instruction == "init":
-                [loc, val] = self.get_args(tokens, ["location", "value"])
+                [loc, val] = self.get_args(instruction, arg_string, ["memref", "value"])
                 self.temp[loc] = eval(val)
 
             elif instruction == "name":
-                [loc, name] = self.get_args(tokens, ["location", "name"])
+                [loc, name] = self.get_args(instruction, arg_string, ["memref", "name"])
                 self.names[name] = loc
 
             elif instruction == "jump":
                 self.stats["steps"] += 1
-                [arg] = self.get_args(tokens, ["tag"])
-                self.ip = self.tags[arg]
+                [arg] = self.get_args(instruction, arg_string, ["jumptag"])
+                self.ip = self.jumptags[arg]
                 continue
 
             elif instruction == "jumpneg":
                 self.stats["steps"] += 1
-                [arg] = self.get_args(tokens, ["tag"])
+                [arg] = self.get_args(instruction, arg_string, ["jumptag"])
                 if self.working < 0:
-                    self.ip = self.tags[arg]
+                    self.ip = self.jumptags[arg]
                     continue
 
             elif instruction == "jumpzero":
                 self.stats["steps"] += 1
-                [arg] = self.get_args(tokens, ["tag"])
+                [arg] = self.get_args(instruction, arg_string, ["jumptag"])
                 if self.working == 0:
-                    self.ip = self.tags[arg]
+                    self.ip = self.jumptags[arg]
                     continue
 
             else:
@@ -221,8 +207,9 @@ class HrmInterpreter:
 ################################################################################
 class HrmParser:
     def __init__(self):
+        self.line_num = None
         self.re_line = re.compile(
-            r"\s*(?P<instruction>\w+|:[a-zA-Z]\w*|#.*)"
+            r"\s*(?P<instruction>[\w\+-]+|:[a-zA-Z]\w*|#.*|$)"
             r"(\s+(?P<arg_string>\S.*)|\s*)"
         )
         self.re_jumptag = re.compile(
@@ -234,21 +221,52 @@ class HrmParser:
             r"(?P<memname>[a-zA-Z]\w*)\s*$|"
             r"\[(?P<memname_deref>[a-zA-Z]\w*)\]\s*$"
         )
+        self.re_valuelist = re.compile(
+            r"(\d+|'[a-zA-Z]')(\s+(\d+|'[a-zA-Z]'))*"
+        )
+        self.re_value = re.compile(
+            r"(?P<value>/d+|'[a-zA-Z]')"
+        )
+
+    def set_line_num(self, line_num):
+        self.line_num = line_num
 
     def parse_line(self, code_line):
+        # returns a tuple containing the instruction and the arg_string
         m = self.re_line.match(code_line)
-        if not m: return "unmatched"
-        return (m.group('instruction'), m.group('arg_string'))
+        if not m:
+            sys.exit("Error on line {}: invalid line of HRM code '{}'".format(self.line_num, code_line))
+        arg_string = "" if m.group('arg_string')==None else m.group('arg_string')
+        return (m.group('instruction'), arg_string)
 
     def parse_jumptag(self, arg_string):
+        # returns the jumptag
         m = self.re_jumptag.match(arg_string)
-        if not m: return "unmatched"
-        return (m.group("jumptag"))
+        if not m:
+            sys.exit("Error on line {}: invalid jumptag '{}'".format(self.line_num, arg_string))
+        return m.group('jumptag')
 
     def parse_memref(self, arg_string):
+        # returns a tuple containing the memory reference, and what type it is
+        # (possible types are: 'addr', 'name'), and a boolean indicating whether we
+        # need to dereference it.
         m = self.re_memref.match(arg_string)
-        if not m: return "unmatched"
-        return (m.group("memaddr"), m.group("memaddr_deref"), m.group("memname"), m.group("memname_deref"))
+        if not m:
+            sys.exit("Error on line {}: invalid memory reference '{}'".format(self.line_num, arg_string))
+
+        for k,v in m.groupdict().items():
+            if v != None:
+                deref = ('deref' in k)
+                type = k[3:7] # extract the type from the dictionary key
+                return (v, type, deref)
+
+        return (None, None, None) # we should never execute this line!
+
+    def parse_value(self, arg_string):
+        m = self.re_value.match(arg_string)
+        if not m:
+            sys.exit("Error on line {}: invalid data value '{}'".format(self.line_num, arg_string))
+        return m.groupdict()
 
 # end class definition
 
@@ -272,24 +290,27 @@ class HrmOptionManager:
             "WARN = continue executing but display a warning (DEFAULT). "
             "STOP = gracefully stop execution. "
             "QUERY = Query the user for the additional input.")
-        (self.options, pos_args) = parser.parse_args()
+        (options, pos_args) = parser.parse_args()
 
         if len(pos_args) < 1:
             parser.error("missing name of sourcefile")
         elif len(pos_args) > 1:
             parser.error("too many command line arguments")
         else:
-            self.sourcefile = pos_args[0]
+            sourcefile = pos_args[0]
+
+        self.memsize = options.memsize
+        self.inboxmode = options.inboxmode
 
         # read instructions from source file
         self.instructions_string = ""
-        with open(self.sourcefile) as file:
+        with open(sourcefile) as file:
             self.instructions_string = file.read()
 
         # read input data from data file (if provided)
         self.data_string = ""
-        if self.options.datafile != None:
-            with open(self.options.datafile) as file:
+        if options.datafile != None:
+            with open(options.datafile) as file:
                 self.data_string = file.read()
 # end class definition
 
@@ -303,42 +324,7 @@ opman = HrmOptionManager()
 hrm = HrmInterpreter(
     opman.instructions_string,
     opman.data_string,
-    opman.options.memsize,
-    opman.options.inboxmode)
+    opman.memsize,
+    opman.inboxmode)
 hrm.run()
 hrm.display_stats()
-
-parser = HrmParser()
-print(parser.parse_line("  command crisp_bacon"))
-print(parser.parse_line("command   crisp_bacon  "))
-print(parser.parse_line("  "))
-print(parser.parse_line("command"))
-print(parser.parse_line("  command 7"))
-print(parser.parse_line("  command a_7"))
-print(parser.parse_line("  command 1 2 3 4 5"))
-print(parser.parse_line("  command %#@$"))
-print(parser.parse_line("  command y"))
-print(parser.parse_line(":foo"))
-print(parser.parse_line(":foo_1"))
-print(parser.parse_line(":1"))
-print(parser.parse_line(":foo badarg"))
-print(parser.parse_line("   # comment"))
-print(parser.parse_line("# comment"))
-print(parser.parse_jumptag("test"))
-print(parser.parse_jumptag(":test"))
-print(parser.parse_jumptag(":1"))
-print(parser.parse_jumptag(":test1"))
-print(parser.parse_jumptag(":test  ") + "x")
-print(parser.parse_jumptag(":_test"))
-print(parser.parse_jumptag(":test_test"))
-print(parser.parse_jumptag(":test_11"))
-print(parser.parse_memref("5"))
-print(parser.parse_memref("55"))
-print(parser.parse_memref("5foo"))
-print(parser.parse_memref("foo5"))
-print(parser.parse_memref("foo_5"))
-print(parser.parse_memref("_foo5"))
-print(parser.parse_memref("[5]"))
-print(parser.parse_memref("[55]"))
-print(parser.parse_memref("[foo]"))
-print(parser.parse_memref("[foo5]"))
