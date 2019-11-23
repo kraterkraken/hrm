@@ -14,42 +14,42 @@ name 4 tens
 name 5 temp
 
 :begin
-copyfrom $zero
-copyto $hundreds
-copyto $tens
+copyfrom zero
+copyto hundreds
+copyto tens
 inbox
-copyto $temp
+copyto temp
 
 :div100
-sub $hundred
+sub hundred
 jumpneg :div10
-copyto $temp
-bump+ $hundreds
-copyfrom $temp
+copyto temp
+bump+ hundreds
+copyfrom temp
 jump :div100
 
 :div10
-copyfrom $temp
-sub $ten
+copyfrom temp
+sub ten
 jumpneg :output100s
-copyto $temp
-bump+ $tens
+copyto temp
+bump+ tens
 jump :div10
 
 :output100s
-copyfrom $hundreds
+copyfrom hundreds
 jumpzero :output10s
 outbox
-copyfrom $tens
+copyfrom tens
 outbox
 jump :output1s
 
 :output10s
-copyfrom $tens
+copyfrom tens
 jumpzero :output1s
 outbox
 
 :output1s
-copyfrom $temp
+copyfrom temp
 outbox
 jump :begin
