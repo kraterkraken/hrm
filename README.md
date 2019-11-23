@@ -1,5 +1,6 @@
 
-Interpreter for a programming language based on the game "Human Resource Machine"
+Interpreter for a programming language which is a superset of the language
+in the game "Human Resource Machine".
 
 Usage:
 
@@ -19,34 +20,35 @@ Usage:
 
 Language Instruction Set:
 
-    data valuelist  uses a whitespace separated list of values as the input data
+    data valuelist  Uses a whitespace separated list of values as the input data.
+                    Valid values are: integers, single characters enclosed in ''
                     Example: data 1 3 9 'A' 7 -1 15 'C'
                     Note: This command overrides data passed in via input file.
 
-    init t v        initialize temp memory location t with value v
+    init t v        Initialize temp memory reference t with value v.
                     Example: init 15 123
 
-    name t n        gives symbolic name n to temp memory location t which allows
-                    $n to be used in place of t in all commands
+    name t n        Gives symbolic name n to temp memory reference t which allows
+                    n to be used in place of t in all commands.
                     Example: name 15 foo
 
-    :tag            tags a position in the instruction set with a name that
-                    can be referenced by any of the 'jump' instructions (see below)
+    :tag            Tags a position in the instruction set with a label (jumptag) that
+                    can be referenced by any of the 'jump' instructions (see below).
 
-    inbox           reads from input into working memory
-    outbox          outputs working memory
-    copyfrom t      copies value from temp memory location t into working memory
-    copyto t        copies value from working memory into temp memory location t
-    add t           working memory = working memory + value at temp memory location t
-    sub t           working memory = working memory - value at temp memory location t
-    bump+ t         increment value at temp memory location t
-    bump- t         decrement value at temp memory location t
-    jump :tag       jump to the given tag
-    jumpneg :tag    jump to the given tag if value in working memory < 0
-    jumpzero :tag   jump to the given tag if value in working memory == 0
+    inbox           Reads from input into working memory.
+    outbox          Outputs working memory.
+    copyfrom t      Copies value from temp memory reference t into working memory.
+    copyto t        Copies value from working memory into temp memory reference t.
+    add t           Working memory = working memory + value at temp memory reference t.
+    sub t           Working memory = working memory - value at temp memory reference t.
+    bump+ t         Increment value at temp memory reference t.
+    bump- t         Decrement value at temp memory reference t.
+    jump :tag       Jump to the given tag.
+    jumpneg :tag    Jump to the given tag if value in working memory < 0.
+    jumpzero :tag   Jump to the given tag if value in working memory == 0.
 
 
-    t is any numeric value from 0 to [memsize]
+    t is any numeric value from 0 to memsize
     n is any string starting with a letter, followed by any number of
       alphanumerics or underscores
 
