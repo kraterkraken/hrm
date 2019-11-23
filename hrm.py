@@ -222,7 +222,7 @@ class HrmInterpreter:
 class HrmParser:
     def __init__(self):
         self.re_line = re.compile(
-            r"\s*(?P<instruction>\w+|:[a-zA-Z]\w*)"
+            r"\s*(?P<instruction>\w+|:[a-zA-Z]\w*|#.*)"
             r"(\s+(?P<arg_string>\S.*)|\s*)"
         )
         self.re_jumptag = re.compile(
@@ -322,6 +322,8 @@ print(parser.parse_line(":foo"))
 print(parser.parse_line(":foo_1"))
 print(parser.parse_line(":1"))
 print(parser.parse_line(":foo badarg"))
+print(parser.parse_line("   # comment"))
+print(parser.parse_line("# comment"))
 print(parser.parse_jumptag("test"))
 print(parser.parse_jumptag(":test"))
 print(parser.parse_jumptag(":1"))
