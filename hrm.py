@@ -11,6 +11,7 @@ class HrmInterpreter:
     # -------------------------------------------------------------------------
     def __init__(self, instructions_string, data_string, memsize, inboxmode):
         # set up virtual machine
+        self.parser = HrmParser()
         self.inbox_mode = inboxmode
         self.memsize = memsize
         self.temp = [0 for i in range(memsize)]
@@ -212,6 +213,44 @@ class HrmInterpreter:
             self.ip += 1
 # end class definition
 
+################################################################################
+#
+#   HrmParser class
+#   Does the work of parsing HRM instructions
+#
+################################################################################
+class HrmParser:
+    def __init__(self):
+        self.re_line = re.compile(
+            r"\s*(?P<instruction>\w+|:[a-zA-Z]\w*)"
+            r"(\s+(?P<arg_string>\S.*)|\s*)"
+        )
+        self.re_jumptag = re.compile(
+            r"(?P<jumptag>:[a-zA-Z]\w*)"
+        )
+        self.re_memref = re.compile(
+            r"(?P<memaddr>\d+)\s*$|"
+            r"\[(?P<memaddr_deref>\d+)\]\s*$|"
+            r"(?P<memname>[a-zA-Z]\w*)\s*$|"
+            r"\[(?P<memname_deref>[a-zA-Z]\w*)\]\s*$"
+        )
+
+    def parse_line(self, code_line):
+        m = self.re_line.match(code_line)
+        if not m: return "unmatched"
+        return (m.group('instruction'), m.group('arg_string'))
+
+    def parse_jumptag(self, arg_string):
+        m = self.re_jumptag.match(arg_string)
+        if not m: return "unmatched"
+        return (m.group("jumptag"))
+
+    def parse_memref(self, arg_string):
+        m = self.re_memref.match(arg_string)
+        if not m: return "unmatched"
+        return (m.group("memaddr"), m.group("memaddr_deref"), m.group("memname"), m.group("memname_deref"))
+
+# end class definition
 
 ################################################################################
 #
@@ -268,3 +307,36 @@ hrm = HrmInterpreter(
     opman.options.inboxmode)
 hrm.run()
 hrm.display_stats()
+
+parser = HrmParser()
+print(parser.parse_line("  command crisp_bacon"))
+print(parser.parse_line("command   crisp_bacon  "))
+print(parser.parse_line("  "))
+print(parser.parse_line("command"))
+print(parser.parse_line("  command 7"))
+print(parser.parse_line("  command a_7"))
+print(parser.parse_line("  command 1 2 3 4 5"))
+print(parser.parse_line("  command %#@$"))
+print(parser.parse_line("  command y"))
+print(parser.parse_line(":foo"))
+print(parser.parse_line(":foo_1"))
+print(parser.parse_line(":1"))
+print(parser.parse_line(":foo badarg"))
+print(parser.parse_jumptag("test"))
+print(parser.parse_jumptag(":test"))
+print(parser.parse_jumptag(":1"))
+print(parser.parse_jumptag(":test1"))
+print(parser.parse_jumptag(":test  ") + "x")
+print(parser.parse_jumptag(":_test"))
+print(parser.parse_jumptag(":test_test"))
+print(parser.parse_jumptag(":test_11"))
+print(parser.parse_memref("5"))
+print(parser.parse_memref("55"))
+print(parser.parse_memref("5foo"))
+print(parser.parse_memref("foo5"))
+print(parser.parse_memref("foo_5"))
+print(parser.parse_memref("_foo5"))
+print(parser.parse_memref("[5]"))
+print(parser.parse_memref("[55]"))
+print(parser.parse_memref("[foo]"))
+print(parser.parse_memref("[foo5]"))
