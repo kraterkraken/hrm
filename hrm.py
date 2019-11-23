@@ -48,7 +48,7 @@ class HrmInterpreter:
             (memref, type, deref) = mem_tuple
 
             addr = None
-            if  type == 'addr' : addr = int(memref)
+            if   type == 'addr': addr = int(memref)
             elif type == 'name': addr = self.names[memref]
 
             self.assert_memaddr(addr)
@@ -313,7 +313,7 @@ class HrmOptionManager:
         if options.datafile != None:
             with open(options.datafile) as file:
                 self.data_string = file.read()
-                
+
 # end class definition
 
 ################################################################################
