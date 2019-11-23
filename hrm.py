@@ -280,13 +280,14 @@ class HrmOptionManager:
     def __init__(self):
         parser = optparse.OptionParser(usage="%prog [options] sourcefile")
         parser.add_option("-d", type="string", dest="datafile",
-            help="specifies the file that the interpreter should use as input data for the program it is interpreting")
+            help="specifies the file that the interpreter should use as input "
+            "data for the program it is interpreting")
         parser.add_option("-m", type="int", dest="memsize", default=25,
             help="sets the size of temporary memory (default is 25)")
         parser.add_option("-i", type="choice", dest="inboxmode",
             choices=["WARN","STOP","QUERY"], default="WARN",
-            help="tells the interpreter how to handle the situation where "
-            "an 'inbox' instruction is encountered, but there is no more data to read:\n"
+            help="tells the interpreter how to handle 'inbox' instructions "
+            "when there is no more data to read: "
             "WARN = continue executing but display a warning (DEFAULT). "
             "STOP = gracefully stop execution. "
             "QUERY = Query the user for the additional input.")
@@ -312,6 +313,7 @@ class HrmOptionManager:
         if options.datafile != None:
             with open(options.datafile) as file:
                 self.data_string = file.read()
+                
 # end class definition
 
 ################################################################################
