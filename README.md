@@ -10,15 +10,16 @@ Usage:
                     (note: the "data" instruction will override data in the datafile)
         -m memsize  Sets the size of temporary memory (default is 25)
         -i inboxmode        
-                    Tells the interpreter how to handle the situation where
-                    an "inbox" instruction is encountered, but there is no more
-                    data to read:
+                    Tells the interpreter how to handle "inbox" instructions
+                    when there is no more data to read:
                     WARN = continue executing but display a warning (DEFAULT)
                     STOP = gracefully stop execution
                     QUERY = Query the user for the additional input
         -h          Display help.
 
 Language Instruction Set:
+
+    # comment       Lines starting with # are comments and are ignored.
 
     data valuelist  Uses a whitespace separated list of values as the input data.
                     Valid values are: integers, single characters enclosed in ''
@@ -58,6 +59,6 @@ Note:
     Then "copyto [15]" will copy working memory to temp memory location 7.
 
 There is one instruction per line.
-Empty lines and lines starting with # are ignored.
+Empty lines are ignored.
 Temp memory is initialized to zeros.
 Working memory has room for 1 value, and is initialized to zero.
