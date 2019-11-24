@@ -19,7 +19,11 @@ class HrmInterpreter:
         self.ip = 0 # instruction pointer
         self.dp = 0 # input data pointer
         self.instructions = instructions_string.split("\n")
-        self.jumptags = dict([(b,a) for (a,b) in list(enumerate(self.instructions)) if b[:1] == ":"])
+        self.jumptags = dict(
+            [(b.strip(),a)
+            for (a,b) in list(enumerate(self.instructions))
+            if b.strip()[:1] == ":"]
+        )
         self.data = [eval(x) for x in data_string.split()]
         self.names = {}
         self.stats = {"size":0, "steps":0}
