@@ -188,12 +188,22 @@ class HrmInterpreter:
             elif instruction == "add":
                 self.stats["steps"] += 1
                 [arg] = self.get_args(instruction, arg_string, ["memref"])
-                self.working += self.temp[arg]
+                if type(self.working) == type(self.temp[arg]):
+                    self.working += self.temp[arg]
+                else:
+                    sys.exit("Error on line {}: "
+                    "incompatible operand types "
+                    "{},{}".format(self.ip+1, self.working, self.temp[arg]))
 
             elif instruction == "sub":
                 self.stats["steps"] += 1
                 [arg] = self.get_args(instruction, arg_string, ["memref"])
-                self.working -= self.temp[arg]
+                if type(self.working) == type(self.temp[arg]):
+                    self.working -= self.temp[arg]
+                else:
+                    sys.exit("Error on line {}: "
+                    "incompatible operand types: "
+                    "{},{}".format(self.ip+1, self.working, self.temp[arg]))
 
             elif instruction == "jump":
                 self.stats["steps"] += 1
