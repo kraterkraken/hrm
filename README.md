@@ -15,6 +15,7 @@ Usage:
                     WARN = continue executing but display a warning (DEFAULT)
                     STOP = gracefully stop execution
                     QUERY = Query the user for the additional input
+        -g          enable debug mode
         -h          Display help.
 
 Language Instruction Set:
