@@ -348,8 +348,6 @@ class HrmOptionManager:
         parser.add_option("-d", type="string", dest="datafile",
             help="specifies the file that the interpreter should use as input "
             "data for the program it is interpreting")
-        parser.add_option("-m", type="int", dest="memsize", default=25,
-            help="sets the size of temporary memory (default is 25)")
         parser.add_option("-g", action="store_true", dest="debugmode", default=False,
             help="enables debug mode")
         parser.add_option("-i", type="choice", dest="inboxmode",
@@ -359,6 +357,8 @@ class HrmOptionManager:
             "WARN = continue executing but display a warning (DEFAULT). "
             "STOP = gracefully stop execution. "
             "QUERY = Query the user for the additional input.")
+        parser.add_option("-m", type="int", dest="memsize", default=25,
+            help="sets the size of temporary memory (default is 25)")
         (options, pos_args) = parser.parse_args()
 
         if len(pos_args) < 1:
