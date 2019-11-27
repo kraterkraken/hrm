@@ -1,6 +1,14 @@
 import sys
 import re
 import optparse
+from sys import version_info
+if version_info.major == 3:
+    pass
+elif version_info.major == 2:
+    try:
+        input = raw_input
+    except NameError:
+        pass
 ################################################################################
 #
 #   HrmInterpreter class
@@ -9,10 +17,11 @@ import optparse
 ################################################################################
 class HrmInterpreter:
     # -------------------------------------------------------------------------
-    def __init__(self, instructions_string, data_string, memsize, inboxmode):
+    def __init__(self, instructions_string, data_string, memsize, debugmode, inboxmode):
         # set up virtual machine
         self.parser = HrmParser()
         self.inbox_mode = inboxmode
+        self.debugmode = debugmode
         self.memsize = memsize
         self.temp = [0 for i in range(memsize)]
         self.working = 0
@@ -123,6 +132,12 @@ class HrmInterpreter:
 
             self.parser.set_line_num(self.ip+1)
             (instruction, arg_string) = self.parser.parse_line(self.instructions[self.ip])
+
+            if self.debugmode:
+                print(">> working with value {}".format(self.working))
+                print(">> line {}, {} {}".format(self.ip+1, instruction, arg_string))
+                dbgcmd = input("Enter debug command (n=next, q=quit):")
+                if dbgcmd != "" and dbgcmd in "qQ": return
 
             # perform the given instruction
 
@@ -335,6 +350,8 @@ class HrmOptionManager:
             "data for the program it is interpreting")
         parser.add_option("-m", type="int", dest="memsize", default=25,
             help="sets the size of temporary memory (default is 25)")
+        parser.add_option("-g", action="store_true", dest="debugmode", default=False,
+            help="enables debug mode")
         parser.add_option("-i", type="choice", dest="inboxmode",
             choices=["WARN","STOP","QUERY"], default="WARN",
             help="tells the interpreter how to handle 'inbox' instructions "
@@ -353,6 +370,7 @@ class HrmOptionManager:
 
         self.memsize = options.memsize
         self.inboxmode = options.inboxmode
+        self.debugmode = options.debugmode
 
         # read instructions from source file
         self.instructions_string = ""
@@ -378,6 +396,7 @@ hrm = HrmInterpreter(
     opman.instructions_string,
     opman.data_string,
     opman.memsize,
+    opman.debugmode,
     opman.inboxmode)
 hrm.run()
 hrm.display_stats()
