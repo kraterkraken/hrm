@@ -1,6 +1,6 @@
 
-Interpreter for a programming language which is a superset of the language
-in the game "Human Resource Machine".
+Interpreter for a programming language which is based on the language
+in the game "Human Resource Machine" (with minor differences).
 
 Usage:
 
