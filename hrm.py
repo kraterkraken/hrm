@@ -21,7 +21,7 @@ class HrmInterpreter:
         # set up virtual machine
         self.parser = HrmParser()
         self.inbox_mode = inboxmode
-        self.debugmode = debugmode
+        self.debug_mode = debugmode
         self.memsize = memsize
         self.temp = [0 for i in range(memsize)]
         self.working = 0
@@ -133,7 +133,7 @@ class HrmInterpreter:
             self.parser.set_line_num(self.ip+1)
             (instruction, arg_string) = self.parser.parse_line(self.instructions[self.ip])
 
-            if self.debugmode:
+            if self.debug_mode:
                 print(">> working with value {}".format(self.working))
                 print(">> line {}, {} {}".format(self.ip+1, instruction, arg_string))
                 dbgcmd = input("Enter debug command (n=next, q=quit):")
