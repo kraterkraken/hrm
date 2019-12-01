@@ -375,6 +375,7 @@ class HrmOptionManager:
             help="sets the size of temporary memory (default is 25)")
         (options, pos_args) = parser.parse_args()
 
+        sourcefile = ""
         if len(pos_args) < 1:
             parser.error("missing name of sourcefile")
         elif len(pos_args) > 1:
