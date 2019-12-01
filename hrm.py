@@ -136,8 +136,22 @@ class HrmInterpreter:
             if self.debug_mode:
                 print(">> working with value {}".format(self.working))
                 print(">> line {}, {} {}".format(self.ip+1, instruction, arg_string))
-                dbgcmd = input("Enter debug command (n=next, q=quit):")
-                if dbgcmd != "" and dbgcmd in "qQ": return
+                dbgcmd = input(">>Enter debug command (h=help):")
+                if dbgcmd == "" or dbgcmd in "nN":
+                    pass
+                elif dbgcmd in "qQ":
+                    return
+                elif dbgcmd in "pP":
+                    print(self.temp)
+                    continue
+                elif dbgcmd in "hH":
+                    print(">> debugger commands:")
+                    print("\t[enter] or n :  execute next instruction")
+                    print("\tp            :  print contents of memory")
+                    print("\tq            :  quit program")
+                else:
+                    print(">> invalid debug command")
+                    continue
 
             # perform the given instruction
 
