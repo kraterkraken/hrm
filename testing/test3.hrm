@@ -1,0 +1,136 @@
+# My solution to the "Digit Exploder" puzzle in Human Resource Machine
+# Grab each number from the inbox and send its digits to the outbox.
+# Best way to run: hrm.py testing/test3.hrm -m 12 -i STOP
+
+data 8 413 129 68
+init 9 0
+init 10 10
+init 11 100
+name 9 zero
+name 10 n10
+name 11 n100
+name 3 counter
+name 5 temp
+
+:begin
+copyfrom zero
+copyto counter
+inbox
+copyto temp
+
+copyfrom temp
+sub n100
+jumpneg :nobump
+copyto temp
+sub n100
+jumpneg :bump1
+copyto temp
+sub n100
+jumpneg :bump2
+copyto temp
+sub n100
+jumpneg :bump3
+copyto temp
+sub n100
+jumpneg :bump4
+copyto temp
+sub n100
+jumpneg :bump5
+copyto temp
+sub n100
+jumpneg :bump6
+copyto temp
+sub n100
+jumpneg :bump7
+copyto temp
+sub n100
+jumpneg :bump8
+copyto temp
+sub n100
+jumpneg :bump9
+
+
+
+:bump9
+bump+ counter
+:bump8
+bump+ counter
+:bump7
+bump+ counter
+:bump6
+bump+ counter
+:bump5
+bump+ counter
+:bump4
+bump+ counter
+:bump3
+bump+ counter
+:bump2
+bump+ counter
+:bump1
+bump+ counter
+output
+
+:nobump
+copyfrom zero
+copyto counter
+
+:begin
+copyfrom temp
+sub n10
+jumpneg :bnobump
+copyto temp
+sub n10
+jumpneg :bbump1
+copyto temp
+sub n10
+jumpneg :bbump2
+copyto temp
+sub n10
+jumpneg :bbump3
+copyto temp
+sub n10
+jumpneg :bbump4
+copyto temp
+sub n10
+jumpneg :bbump5
+copyto temp
+sub n10
+jumpneg :bbump6
+copyto temp
+sub n10
+jumpneg :bbump7
+copyto temp
+sub n10
+jumpneg :bbump8
+copyto temp
+sub n10
+jumpneg :bbump9
+
+
+:bbump9
+bump+ counter
+:bbump8
+bump+ counter
+:bbump7
+bump+ counter
+:bbump6
+bump+ counter
+:bbump5
+bump+ counter
+:bbump4
+bump+ counter
+:bbump3
+bump+ counter
+:bbump2
+bump+ counter
+:bbump1
+bump+ counter
+output
+:bnobump
+copyfrom zero
+copyto counter
+
+copyfrom temp
+outbox
+jump :begin
